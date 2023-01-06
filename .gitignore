@@ -1,3 +1,4 @@
 /vendor/
 /alertmanager2es
 *.exe
+.idea

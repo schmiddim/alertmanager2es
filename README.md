@@ -199,6 +199,11 @@ alertmanager2es exposes [Prometheus][] metrics on `/metrics`.
 
     alerts.labels.alertname:"Disk_Likely_To_Fill_Next_4_Days"
 
+## Example Alertmanager Payload
+```
+curl -d example.json http://192.168.178.25:9097/webhook#
+```
+
 ## Contributions
 
 Pull requests, comments and suggestions are welcome.

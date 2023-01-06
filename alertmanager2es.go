@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -29,6 +29,27 @@ type (
 			alertsInvalid    *prometheus.CounterVec
 			alertsSuccessful *prometheus.CounterVec
 		}
+	}
+	ElasticSearchEntry struct {
+		Alert struct {
+			Annotations  map[string]string `json:"annotations"`
+			EndsAt       time.Time         `json:"endsAt"`
+			GeneratorURL string            `json:"generatorURL"`
+			Labels       map[string]string `json:"labels"`
+			StartsAt     time.Time         `json:"startsAt"`
+			Status       string            `json:"status"`
+		}
+		CommonAnnotations map[string]string `json:"commonAnnotations"`
+		CommonLabels      map[string]string `json:"commonLabels"`
+		ExternalURL       string            `json:"externalURL"`
+		GroupLabels       map[string]string `json:"groupLabels"`
+		Receiver          string            `json:"receiver"`
+		Status            string            `json:"status"`
+		Version           string            `json:"version"`
+		GroupKey          string            `json:"groupKey"`
+
+		// Timestamp records when the alert notification was received
+		Timestamp string `json:"@timestamp"`
 	}
 
 	AlertmanagerEntry struct {
@@ -122,7 +143,12 @@ func (e *AlertmanagerElasticsearchExporter) buildIndexName(createTime time.Time)
 
 func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r *http.Request) {
 	e.prometheus.alertsReceived.WithLabelValues().Inc()
-
+	if r.Method != "POST" {
+		err := errors.New("only POST")
+		http.Error(w, err.Error(), http.StatusMethodNotAllowed)
+		log.Error(err)
+		return
+	}
 	if r.Body == nil {
 		e.prometheus.alertsInvalid.WithLabelValues().Inc()
 		err := errors.New("got empty request body")
@@ -131,7 +157,7 @@ func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r
 		return
 	}
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		e.prometheus.alertsInvalid.WithLabelValues().Inc()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -157,25 +183,59 @@ func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r
 		return
 	}
 
-	now := time.Now()
-	msg.Timestamp = now.Format(time.RFC3339)
+	// continue her with for on ElasticSearchEntry
+	// incidentJson, _ := json.Marshal(msg)
 
-	incidentJson, _ := json.Marshal(msg)
+	for _, s := range msg.Alerts {
+		ese := ElasticSearchEntry{
+			CommonAnnotations: msg.CommonAnnotations,
+			CommonLabels:      msg.CommonLabels,
+			ExternalURL:       msg.ExternalURL,
+			GroupLabels:       msg.GroupLabels,
+			Receiver:          msg.Receiver,
+			Status:            msg.Status,
+			Version:           msg.Version,
+			GroupKey:          msg.GroupKey,
+			Alert:             s,
+		}
+		now := time.Now()
+		ese.Timestamp = now.Format(time.RFC3339)
+		incidentJson, _ := json.Marshal(ese)
+		req := esapi.IndexRequest{
+			Index: e.buildIndexName(now),
+			Body:  bytes.NewReader(incidentJson),
+		}
+		res, err := req.Do(context.Background(), e.elasticSearchClient)
+		if err != nil {
+			e.prometheus.alertsInvalid.WithLabelValues().Inc()
+			err := fmt.Errorf("unable to insert document in elasticsearch")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			log.Error(err)
+			return
+		}
+		if res.StatusCode != 200 {
+			b, err := io.ReadAll(r.Body)
+			errm := fmt.Errorf("unable to insert document in elasticsearch %q", b)
 
-	req := esapi.IndexRequest{
-		Index: e.buildIndexName(now),
-		Body:  bytes.NewReader(incidentJson),
+			log.Error(err, errm)
+		}
+
+		defer res.Body.Close()
+		// req := esapi.IndexRequest{
+		// 	Index: e.buildIndexName(now),
+		// 	Body:  bytes.NewReader(incidentJson),
+		// }
+		// res, err := req.Do(context.Background(), e.elasticSearchClient)
+		// if err != nil {
+		// 	e.prometheus.alertsInvalid.WithLabelValues().Inc()
+		// 	err := fmt.Errorf("unable to insert document in elasticsearch")
+		// 	http.Error(w, err.Error(), http.StatusBadRequest)
+		// 	log.Error(err)
+		// 	return
+		// }
+		// defer res.Body.Close()
+
+		log.Debugf("received and stored alert: %v", msg.CommonLabels)
+		e.prometheus.alertsSuccessful.WithLabelValues().Inc()
 	}
-	res, err := req.Do(context.Background(), e.elasticSearchClient)
-	if err != nil {
-		e.prometheus.alertsInvalid.WithLabelValues().Inc()
-		err := fmt.Errorf("unable to insert document in elasticsearch")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Error(err)
-		return
-	}
-	defer res.Body.Close()
-
-	log.Debugf("received and stored alert: %v", msg.CommonLabels)
-	e.prometheus.alertsSuccessful.WithLabelValues().Inc()
 }
