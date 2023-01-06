@@ -7,6 +7,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 
 	elasticsearch "github.com/elastic/go-elasticsearch/v7"
 	"github.com/jessevdk/go-flags"
@@ -114,5 +115,7 @@ func startHttpServer(exporter *AlertmanagerElasticsearchExporter) {
 
 	http.HandleFunc("/webhook", exporter.HttpHandler)
 	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(opts.ServerBind, nil))
+	server := http.Server{ReadHeaderTimeout: 3 * time.Second, Addr: opts.ServerBind}
+
+	log.Fatal(server.ListenAndServe())
 }
