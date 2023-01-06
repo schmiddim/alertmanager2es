@@ -1,0 +1,112 @@
+{
+    "receiver": "default",
+    "status": "firing",
+    "alerts": [
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Test alert devteam5",
+                "severity": "warning",
+                "team": "devteam5",
+                "type": "probe"
+            },
+            "annotations": {
+                "description": ":  failed",
+                "summary": "Failed probe:"
+            },
+            "startsAt": "2023-01-06T17:45:06.52Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus.admin.achenar.net/graph?g0.expr=vector%280%29\u0026g0.tab=1",
+            "fingerprint": "9ccd009e63511f4e"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Test alert devteam5",
+                "foo": "1",
+                "severity": "warning",
+                "team": "devteam5",
+                "type": "probe"
+            },
+            "annotations": {
+                "description": ":  failed",
+                "summary": "Failed probe:"
+            },
+            "startsAt": "2023-01-06T17:45:04.717Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus.admin.achenar.net/graph?g0.expr=vector%280%29\u0026g0.tab=1",
+            "fingerprint": "47256d10f89b147b"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Test alert devteam5",
+                "foo": "2",
+                "severity": "warning",
+                "team": "devteam5",
+                "type": "probe"
+            },
+            "annotations": {
+                "description": ":  failed",
+                "summary": "Failed probe:"
+            },
+            "startsAt": "2023-01-06T17:45:08.168Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus.admin.achenar.net/graph?g0.expr=vector%280%29\u0026g0.tab=1",
+            "fingerprint": "511948ed655c3064"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Test alert devteam5",
+                "foo": "3",
+                "severity": "warning",
+                "team": "devteam5",
+                "type": "probe"
+            },
+            "annotations": {
+                "description": ":  failed",
+                "summary": "Failed probe:"
+            },
+            "startsAt": "2023-01-06T17:45:05.004Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus.admin.achenar.net/graph?g0.expr=vector%280%29\u0026g0.tab=1",
+            "fingerprint": "36f77ed00368a0ad"
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Test alert devteam5",
+                "foo": "4",
+                "severity": "warning",
+                "team": "devteam5",
+                "type": "probe"
+            },
+            "annotations": {
+                "description": ":  failed",
+                "summary": "Failed probe:"
+            },
+            "startsAt": "2023-01-06T17:45:05.585Z",
+            "endsAt": "0001-01-01T00:00:00Z",
+            "generatorURL": "http://prometheus.admin.achenar.net/graph?g0.expr=vector%280%29\u0026g0.tab=1",
+            "fingerprint": "47d31293cf0f5c76"
+        }
+    ],
+    "groupLabels": {
+        "alertname": "Test alert devteam5"
+    },
+    "commonLabels": {
+        "alertname": "Test alert devteam5",
+        "severity": "warning",
+        "team": "devteam5",
+        "type": "probe"
+    },
+    "commonAnnotations": {
+        "description": ":  failed",
+        "summary": "Failed probe:"
+    },
+    "externalURL": "http://c4f979e271ad:9093",
+    "version": "4",
+    "groupKey": "{}:{alertname=\"Test alert devteam5\"}",
+    "truncatedAlerts": 0
+}
