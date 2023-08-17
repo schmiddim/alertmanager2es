@@ -6,6 +6,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Run Golangci lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: -E exportloopref,gofmt --timeout=30m
+          
       - uses: actions/checkout@v3
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
@@ -24,12 +31,6 @@ jobs:
         uses: securego/gosec@master
         with:
           args: ./...
-
-      - name: Run Golangci lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: -E exportloopref,gofmt --timeout=30m
 
       - name: Docker meta
         id: docker_meta
