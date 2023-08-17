@@ -213,9 +213,9 @@ func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r
 			log.Error(err)
 			return
 		}
-		if res.StatusCode >= 200 && res.StatusCode < 300 {
+		if res.StatusCode != 201 {
 			b, err := io.ReadAll(r.Body)
-			errm := fmt.Errorf("unable to insert document in elasticsearch: %q statusCode: %d", b,res.StatusCode)
+			errm := fmt.Errorf("unable to insert document in elasticsearch: %q statusCode: %d", b, res.StatusCode)
 
 			log.Error(err, errm)
 		}
