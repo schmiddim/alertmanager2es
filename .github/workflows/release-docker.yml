@@ -1,11 +1,11 @@
 name: "Release: docker"
 
 on:
-  schedule:
-    - cron: '0 6 * * 1'
+  # schedule:
+    # - cron: '0 6 * * 1'
   push:
-    branches:
-      - '**'
+    # branches:
+    #   - '**'
     tags:
       - '*.*.*'
 
