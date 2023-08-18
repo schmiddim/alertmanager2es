@@ -6,7 +6,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 )
 
 require (
