@@ -13,7 +13,7 @@ jobs:
    #       version: latest
   #        args: -E exportloopref,gofmt --timeout=30m
         
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
         with:
