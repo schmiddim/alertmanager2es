@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Docker meta
       id: docker_meta
-      uses: crazy-max/ghaction-docker-meta@v4
+      uses: crazy-max/ghaction-docker-meta@v5
       with:
         images: schmiddim/alertmanager2es #,quay.io/schmiddim/alertmanager2es
         #tag-sha: true
