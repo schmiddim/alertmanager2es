@@ -1,6 +1,6 @@
 module github.com/webdevops/alertmanager2es
 
-go 1.18
+go 1.26
 
 require (
 	github.com/elastic/go-elasticsearch/v7 v7.17.10
