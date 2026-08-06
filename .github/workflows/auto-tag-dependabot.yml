@@ -1,20 +1,27 @@
 name: "Auto-tag on Dependabot merge"
 
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: write
+  packages: write
 
 concurrency:
   group: auto-tag
 
 jobs:
   auto-tag:
+    # Only run if the push was a Dependabot merge (commit author or merge commit)
     if: >
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.user.login == 'dependabot[bot]'
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.author.name, 'dependabot') ||
+      contains(github.event.head_commit.message, 'Bump ') ||
+      contains(github.event.head_commit.committer.name, 'dependabot')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +33,7 @@ jobs:
         run: |
           LATEST_TAG=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n1)
           if [ -z "$LATEST_TAG" ]; then
-            echo "No existing semver tag found"
+            echo "No existing semver tag found, cannot bump"
             exit 1
           fi
           echo "Latest tag: $LATEST_TAG"
@@ -41,5 +48,66 @@ jobs:
 
       - name: Create and push tag
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag ${{ steps.bump.outputs.new_tag }}
           git push origin ${{ steps.bump.outputs.new_tag }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            schmiddim/alertmanager2es
+            ghcr.io/schmiddim/alertmanager2es
+          tags: |
+            type=raw,value=${{ steps.bump.outputs.new_tag }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm,linux/arm64,linux/ppc64le
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          generate_release_notes: true
+          body: |
+            ## Docker Images
+
+            **DockerHub:**
+            ```
+            docker pull schmiddim/alertmanager2es:${{ steps.bump.outputs.new_tag }}
+            ```
+
+            **GitHub Container Registry:**
+            ```
+            docker pull ghcr.io/schmiddim/alertmanager2es:${{ steps.bump.outputs.new_tag }}
+            ```
+
+            **Platforms:** `linux/amd64`, `linux/arm`, `linux/arm64`, `linux/ppc64le`
