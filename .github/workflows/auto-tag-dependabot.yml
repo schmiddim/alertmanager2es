@@ -1,0 +1,45 @@
+name: "Auto-tag on Dependabot merge"
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-tag
+
+jobs:
+  auto-tag:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest semver tag and bump patch
+        id: bump
+        run: |
+          LATEST_TAG=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No existing semver tag found"
+            exit 1
+          fi
+          echo "Latest tag: $LATEST_TAG"
+          VERSION="${LATEST_TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          NEW_PATCH=$((PATCH + 1))
+          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          echo "New tag: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ steps.bump.outputs.new_tag }}
+          git push origin ${{ steps.bump.outputs.new_tag }}
