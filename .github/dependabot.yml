@@ -3,21 +3,23 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
     open-pull-requests-limit: 10
     groups:
-      patch-minor:
+      all:
         update-types:
           - patch
           - minor
+          - major
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
     open-pull-requests-limit: 10
     groups:
-      patch-minor:
+      all:
         update-types:
           - patch
           - minor
+          - major
